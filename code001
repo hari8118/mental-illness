@@ -1,0 +1,94 @@
+# ye library import kar lena pandas sklearn.feature_extraction.text CountVectorizer  sklearn.naive_bayes telegram telegram.ReplyKeyboardMarkup telegram.ext
+# codes ye rahege 
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+
+# Define the questions and their possible answers
+questions = [
+    "How do you feel about your mental state?",
+    "Do you often feel sad or depressed?",
+    "How often do you feel happy?",
+    "Do you have someone to talk to or love?",
+    "Have you ever had suicidal thoughts?",
+    "Do you feel overwhelmed with work or life?",
+    "Do you have trouble sleeping?",
+    "Do you experience anxiety or panic attacks?",
+    "Do you often feel irritable or angry?",
+    "Have you experienced trauma or abuse in the past?",
+]
+answers = [
+    ["Great", "Okay", "Not great", "Terrible"],
+    ["Often", "Sometimes", "Rarely", "Never"],
+    ["All the time", "Often", "Sometimes", "Rarely"],
+    ["Yes", "No"],
+    ["Yes", "No"],
+    ["All the time", "Often", "Sometimes", "Rarely"],
+    ["All the time", "Often", "Sometimes", "Rarely", "Never"],
+    ["All the time", "Often", "Sometimes", "Rarely", "Never"],
+    ["All the time", "Often", "Sometimes", "Rarely", "Never"],
+    ["Yes", "No"]
+]
+
+# Create the bot and define the handlers
+TOKEN = '5729290861:AAHFCqkoGbp6-5vx9iFA6l2MA-eoI0bmCVY'
+#mene upar bot token dal diya hai agar koi or code likho toh ye hi token use karna agar tg pe hi karna ho
+bot = telegram.Bot(TOKEN)
+
+def start(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Welcome to the mental illness test bot! Please answer the following questions truthfully and I'll tell you if you might be suffering from a mental illness.")
+    context.user_data['answers'] = []
+    context.user_data['question_index'] = 0
+    context.user_data['finished'] = False
+    ask_question(update, context)
+
+def ask_question(update, context):
+    if context.user_data['finished']:
+        return
+    if context.user_data['question_index'] == len(questions):
+        context.user_data['finished'] = True
+        process_answers(update, context)
+        return
+    question = questions[context.user_data['question_index']]
+    answer_options = answers[context.user_data['question_index']]
+    reply_keyboard = [[str(option)] for option in answer_options]
+    update.message.reply_text(question, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    context.user_data['question_index'] += 1
+
+def process_answers(update, context):
+    answers = context.user_data['answers']
+    X = pd.Series(answers)
+    X = vectorizer.transform(X)
+    y_pred = model.predict(X)
+    n_positive = sum(y_pred)
+    n_total = len(y_pred)
+    if n_positive > 0:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Based on your answers, you might be suffering from a mental illness. Please consult a healthcare professional for further assistance.")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Based on your answers, you are not likely to be suffering from a mental illness. However, if you have any concerns, please consult a healthcare professional for further assistance.")
+
+def handle_answer(update, context):
+    answer = update.message.text
+    context.user_data['answers'].append(answer)
+    ask_question(update, context)
+
+updater = Updater(TOKEN, use_context=True)
+dispatcher
+
+#or kaggle pe train karne ke liye ye use karna 
+
+# Load the Kaggle dataset
+df = pd.read_csv('mental_health_dataset.csv')
+
+# Preprocess the data
+X = df['text']
+y = df['label']
+
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(X)
+
+# Train the model
+model = MultinomialNB()
+model.fit(X, y)
+
